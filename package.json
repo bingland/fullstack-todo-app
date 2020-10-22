@@ -1,0 +1,24 @@
+{
+  "name": "fullstack-todo-app",
+  "version": "1.0.0",
+  "description": "Fullstack todo app made with Node, Express, MongoDB, mongoose, and vanilla JS for the frontend. Assignment for DGM 3760",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bingland/fullstack-todo-app.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bingland/fullstack-todo-app/issues"
+  },
+  "homepage": "https://github.com/bingland/fullstack-todo-app#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.10.9"
+  }
+}
