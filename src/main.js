@@ -1,11 +1,11 @@
 //inital data array. DO NOT EDIT OR REMOVE - Use these as the inital app state.
 //This is the kind of data you would traditionally get from a data base.
 //For now we are just going to mock it.
-let initialTodos = [
-    {id: 1, todo: "Buy milk.", complete: false, category: "Grocery"},
-    {id: 2, todo: "Clean the cat box.", complete: false, category: "House"},
-    {id: 3, todo: "Chips and salsa.", complete: false, category: "Grocery"},
-    {id: 4, todo: "Finish Homework for DGM 3760", complete: false, category: "School"}
+let todoData = [
+    // {id: 1, todo: "Buy milk.", complete: false, category: "Grocery"},
+    // {id: 2, todo: "Clean the cat box.", complete: false, category: "House"},
+    // {id: 3, todo: "Chips and salsa.", complete: false, category: "Grocery"},
+    // {id: 4, todo: "Finish Homework for DGM 3760", complete: false, category: "School"}
 ]
 
 // global vars for state management
@@ -26,7 +26,7 @@ const renderControls = () => {
 
     // updates categories array for state
     categories = []
-    for (let item of initialTodos) {
+    for (let item of todoData) {
         if (!categories.includes(item.category)) {
             categories.push(item.category)
         }
@@ -61,15 +61,36 @@ const renderControls = () => {
 
 
 }
-
+// GET request
+const getTodos = () => {
+    fetch('/todos')
+        .then(response => response.json())
+        .then(data => {
+            todoData = data
+            renderControls()
+            renderTodos()
+    });
+}
+// POST request
 const addTodo = () => {
-    const addTodoDesc = document.querySelector('.addTodoDesc')
-    const addTodoCat = document.querySelector('.addTodoCat')
+    const addTodoDesc = document.querySelector('.addTodoDesc').value
+    const addTodoCat = document.querySelector('.addTodoCat').value
 
-    if (addTodoDesc.value.replace(/\s/g,'') !== '' && addTodoCat.value.replace(/\s/g,'') !== '') {
-        initialTodos.push({id: initialTodos.length + 1, todo: addTodoDesc.value, complete: false, category: addTodoCat.value})
-        renderTodos()
-        renderControls()
+    if (addTodoDesc.replace(/\s/g,'') !== '' && addTodoCat.replace(/\s/g,'') !== '') {
+        // localhost:3000/todos?text=Carve pumpkins&complete=true&category=Fun
+        fetch(`/todos?text=${addTodoDesc}&complete=false&category=${addTodoCat}`, {
+            method: 'POST'
+        }).
+        then(response => response.json())
+        .then(data => {
+            todoData = data
+            renderControls()
+            renderTodos()
+        })
+
+        // todoData.push({id: todoData.length + 1, todo: addTodoDesc.value, complete: false, category: addTodoCat.value})
+        // renderTodos()
+        // renderControls()
     }
 }
 
@@ -95,7 +116,7 @@ const catToggle = (catName, catIndex) => {
 const renderTodos = () => {
     output.innerHTML = ''
 
-    initialTodos.forEach(element => {
+    todoData.forEach((element, index) => {
         // render items only if they fit the category requirements
         if (activeCategories.includes(element.category) || activeCategories.length == 0 ) {
             // dont render completed items if the hideDoneTodos filter is on 
@@ -103,9 +124,9 @@ const renderTodos = () => {
                 let checked = element.complete ? 'checked' : ''
                 let myclass = element.complete ? 'todoContent todoChecked' : 'todoContent'
                 output.innerHTML += `
-                    <div class="todo todoUnchecked" data-id="${element.id}">
+                    <div class="todo todoUnchecked" data-id="${element._id}">
                         <input type="checkbox" name="todo" value="todo" class="crossoff" ${checked}>
-                        <label class="${myclass}">${element.todo}</label><div class="catTodo">${element.category}</div>
+                        <label class="${myclass}">${element.text}</label><div class="catTodo">${element.category}</div>
                         <div class="svgContainer">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="deleteTodo">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -117,6 +138,7 @@ const renderTodos = () => {
         }
     })
 
+    // PUT REQUEST
     // cross off todos by clicking
     let checkboxes = document.querySelectorAll('.crossoff')
     let labels = document.querySelectorAll('.todoContent')
@@ -124,14 +146,31 @@ const renderTodos = () => {
     const toggleClicks = (element, index) => {
         element.addEventListener('click', () => {
             // cross off todos by clicking label, change complete property for the respective todo
-            let myIndex = Number(todos[index].getAttribute('data-id')) - 1
             if (element.tagName == 'LABEL') {
-                initialTodos[myIndex].complete = !checkboxes[index].checked
+                todoData[index].complete = !checkboxes[index].checked
+                fetch(`/todos/${todoData[index]._id}?text=${todoData[index].text}&complete=${todoData[index].complete}&category=${todoData[index].category}`, {
+                    method: 'PUT'
+                }).
+                then(response => response.json())
+                .then(data => {
+                    todoData = data
+                    renderControls()
+                    renderTodos()
+                })
             }
 
             // cross off todos by checkbox, change complete property for the respective todo
             if (element.tagName == 'INPUT') {
-                initialTodos[myIndex].complete = checkboxes[index].checked
+                todoData[index].complete = checkboxes[index].checked
+                fetch(`/todos/${todoData[index]._id}?text=${todoData[index].text}&complete=${todoData[index].complete}&category=${todoData[index].category}`, {
+                    method: 'PUT'
+                }).
+                then(response => response.json())
+                .then(data => {
+                    todoData = data
+                    renderControls()
+                    renderTodos()
+                })
             }
             // rerender
             renderTodos()
@@ -142,13 +181,23 @@ const renderTodos = () => {
     checkboxes.forEach(toggleClicks)
     labels.forEach(toggleClicks)
 
+    // DELETE
     // delete todos by clicking the SVG
     let closers = document.querySelectorAll('.deleteTodo')
     closers.forEach((element, index) => {
-        element.addEventListener('click', () => {
-            let myIndex = Number(todos[index].getAttribute('data-id')) - 1
-            initialTodos.splice(myIndex, 1)
-            readjustIds()
+        element.addEventListener('click', (e) => {
+            let id = todoData[index]._id
+            fetch(`/todos/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                todoData = data
+                renderControls()
+                renderTodos()
+            })
+
+            // todoData.splice(index, 1)
             renderTodos()
             renderControls()
         })
@@ -158,32 +207,18 @@ const renderTodos = () => {
     if (todos.length === 0) {
         activeCategories = []
 
-        if (initialTodos.length !== 0) {
+        if (todoData.length !== 0) {
             hideDoneTodos = false
             renderControls()
             renderTodos()
         }
     }
-
-    // update storage at the end of the renderTodo cycle
-    updateStorage()
 }
-
-// readjust all the ids for when a todo is deleted 
-const readjustIds = () => {
-    for (let i in initialTodos) {
-        initialTodos[i].id = Number(i) + 1
-    }
-}
-
-// update the storage with the current version of initial todos
-const updateStorage = () => {
-    localStorage.setItem('todos', JSON.stringify(initialTodos))
-}
-
-// update initial todos with the storage. if there's nothing set for todos, then continue
-initialTodos = localStorage.getItem('todos') == null ? initialTodos : JSON.parse(localStorage.getItem('todos'))
 
 // initial function calls to render the todos and controls
-renderControls()
-renderTodos()
+
+const init = () => {
+    getTodos()
+}
+
+init()

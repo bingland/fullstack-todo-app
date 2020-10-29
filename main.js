@@ -1,12 +1,14 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
+//const cors = require('cors')
 const app = express()
 const port = process.env.PORT || 3000
 
 //middleware
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+
 
 mongoose.connect(process.env.MONGO_URL, {
     useNewUrlParser: true,
@@ -45,7 +47,7 @@ app.post('/todos', (req, res) => {
 
 // PUT
 app.put('/todos/:id', (req, res) => {
-    Todo.findById(req.params.id, (err, todo) => {
+    Todo.findById(`${req.params.id}`, (err, todo) => {
         if (err) console.log(err)
         todo.updateOne(req.query, (err, todos) => {
             if (err) console.log(err)
